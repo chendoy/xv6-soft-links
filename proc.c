@@ -7,6 +7,8 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -19,6 +21,12 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+
+
+int symlink(const char*, const char*);
+
+
+int readlink(const char*, char* buf, size_t bufsize);
 
 void
 pinit(void)
@@ -140,7 +148,7 @@ userinit(void)
   p->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
-  p->cwd = namei("/");
+  p->cwd = namei("/", 1);
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
@@ -532,3 +540,4 @@ procdump(void)
     cprintf("\n");
   }
 }
+

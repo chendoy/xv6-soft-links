@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 struct buf;
 struct context;
 struct file;
@@ -47,7 +49,7 @@ void            iunlock(struct inode*);
 void            iunlockput(struct inode*);
 void            iupdate(struct inode*);
 int             namecmp(const char*, const char*);
-struct inode*   namei(char*);
+struct inode*   namei(char*, int);
 struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
@@ -120,6 +122,8 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             symlink(const char*, const char*);
+int             readlink(const char*, char*, size_t);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -155,6 +159,8 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
+int             create_symlink(const char*, const char*);
+int             read_symlink(const char*, char*, size_t);
 
 // timer.c
 void            timerinit(void);
@@ -188,3 +194,4 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+#define MAX_DEREFERENCE 31

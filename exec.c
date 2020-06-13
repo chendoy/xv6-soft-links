@@ -7,6 +7,8 @@
 #include "x86.h"
 #include "elf.h"
 
+#define LINK_LIMIT 55
+
 int
 exec(char *path, char **argv)
 {
@@ -18,14 +20,28 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
+  char pathname[LINK_LIMIT];  //???
 
   begin_op();
-
-  if((ip = namei(path)) == 0){
-    end_op();
-    cprintf("exec: fail\n");
-    return -1;
+  if (read_symlink(path, pathname, LINK_LIMIT) == 0) // ??? read symlink into path
+  {
+    if ((ip = namei(pathname,1)) == 0)
+    {
+      end_op();
+      cprintf("exec: fail\n");
+      return -1;
+    }
   }
+  else
+  {
+    if ((ip = namei(path,1)) == 0) // ??
+    {
+      end_op();
+      cprintf("exec: fail\n");
+      return -1;
+    }
+}
+
   ilock(ip);
   pgdir = 0;
 

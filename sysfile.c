@@ -16,6 +16,8 @@
 #include "file.h"
 #include "fcntl.h"
 
+#define LINK_LIMIT 55
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -125,7 +127,7 @@ sys_link(void)
     return -1;
 
   begin_op();
-  if((ip = namei(old)) == 0){
+  if((ip = namei(old, 1)) == 0){
     end_op();
     return -1;
   }
@@ -302,7 +304,7 @@ sys_open(void)
       return -1;
     }
   } else {
-    if((ip = namei(path)) == 0){
+    if((ip = namei(path, 1)) == 0){
       end_op();
       return -1;
     }
@@ -374,12 +376,29 @@ sys_chdir(void)
   char *path;
   struct inode *ip;
   struct proc *curproc = myproc();
-  
+  char path_name[LINK_LIMIT]; //?? necessary?
+
   begin_op();
-  if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
+
+  if(argstr(0, &path) < 0 || (ip = namei(path, 1)) == 0){
     end_op();
     return -1;
   }
+
+  if(read_symlink(path, path_name, LINK_LIMIT) == 0) // ?? if it's not symbolic link ??
+  {
+    if((ip = namei(path_name, 1)) == 0) // ?? if the indoe doesn't exists
+    {
+      end_op();
+      return -1;
+    }
+  }
+  else if((ip = namei(path, 1) )== 0) // ?? if the current path doesnt exist
+  {
+    end_op();
+    return -1;
+  }
+
   ilock(ip);
   if(ip->type != T_DIR){
     iunlockput(ip);
@@ -440,5 +459,67 @@ sys_pipe(void)
   }
   fd[0] = fd0;
   fd[1] = fd1;
+  return 0;
+}
+
+int
+create_symlink(const char* oldpath , const char* newpath)
+{
+  struct file *f;
+  struct inode *ip;
+
+  begin_op();
+
+  if((ip = create((char*)newpath, T_SYMLINK, 0, 0)) == 0)
+  {
+    end_op();
+    return -1;
+  }
+
+  end_op();
+
+  if((f = filealloc()) == 0)
+  {
+    if(f)
+      fileclose(f);
+    iunlockput(ip);
+    return -1;
+  }
+
+  if(strlen(newpath) > LINK_LIMIT)
+    panic("symlink: new path is too long");
+  safestrcpy((char*)ip->addrs, oldpath, LINK_LIMIT);
+  iunlock(ip);
+
+  // f->type = FD_INODE;
+  f->ip = ip;
+  f->off = 0;
+  f->readable = 1;
+  f->writable = 0;
+
+  return 0;
+}
+
+int
+read_symlink(const char* pathname, char* buf, size_t bufsize)
+{
+  if(strlen(pathname) > bufsize)
+    return -1;
+
+  struct inode * ip;
+  if ((ip = namei((char*)pathname, 1)) == 0)  // checks if the path exists
+    return -1;
+  
+  ilock(ip);
+  if(ip->type != T_SYMLINK)
+  {
+    iunlock(ip);
+    return -1;
+  }
+  
+  // if ((ip = namei((char*)pathname)) == 0)  // checks if the path exists
+  //   return -1;
+  safestrcpy(buf,(char*)ip->addrs, bufsize);
+  iunlock(ip);
   return 0;
 }

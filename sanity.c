@@ -2,7 +2,7 @@
 #include "user.h"
 #include "fcntl.h"
 
-#define FILE_SZ 1 << 19
+#define FILE_SZ 50
 
 char writeBuf[FILE_SZ];
 char readBuf[FILE_SZ];
@@ -46,11 +46,25 @@ int readFromFile (char* buf, char* filename)
     return 0;
 }
 
-int main()
+void writeMoreThan70kBTest()
 {
     memset((void*)writeBuf, 'a', FILE_SZ);
-    writeToFile(writeBuf, "ass4File.txt");
-    readFromFile(readBuf, "ass4File.txt");
-    printf(1, "read content: %s\n", readBuf);
+    writeToFile(writeBuf, "myfile.txt");
+    // readFromFile(readBuf, "myfile.txt");
+    // printf(1, "read content: %s\n", readBuf);
+}
+
+void symbolicLinkTest()
+{
+    char buf[64];
+    symlink("/myfile.txt", "/link.txt");
+    readlink("/link.txt", buf, 64);
+    printf(1, "readlink reads: %s\n", buf);
+}
+
+int main()
+{
+    writeMoreThan70kBTest();
+    symbolicLinkTest();
     exit();
 }
