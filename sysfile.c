@@ -16,7 +16,7 @@
 #include "file.h"
 #include "fcntl.h"
 
-#define LINK_LIMIT 55
+#define LINK_LIMIT 50
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -255,6 +255,11 @@ create(char *path, short type, short major, short minor)
     ilock(ip);
     if(type == T_FILE && ip->type == T_FILE)
       return ip;
+    if (type == T_SYMLINK)
+    {
+      // ip->symlink = 1;
+      return ip;
+    }
     iunlockput(ip);
     return 0;
   }
@@ -486,12 +491,11 @@ create_symlink(const char* oldpath , const char* newpath)
     return -1;
   }
 
-  if(strlen(newpath) > LINK_LIMIT)
+  if(strlen(oldpath) > LINK_LIMIT)
     panic("symlink: new path is too long");
   safestrcpy((char*)ip->addrs, oldpath, LINK_LIMIT);
   iunlock(ip);
 
-  // f->type = FD_INODE;
   f->ip = ip;
   f->off = 0;
   f->readable = 1;
@@ -504,11 +508,16 @@ int
 read_symlink(const char* pathname, char* buf, size_t bufsize)
 {
   if(strlen(pathname) > bufsize)
+  {
+    cprintf("pathname is bigger than bufsize\n");
     return -1;
+  }
 
   struct inode * ip;
   if ((ip = namei((char*)pathname, 1)) == 0)  // checks if the path exists
+  {
     return -1;
+  }
   
   ilock(ip);
   if(ip->type != T_SYMLINK)

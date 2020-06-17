@@ -684,6 +684,7 @@ skipelem(char *path, char *name)
 static struct inode*
 namex(struct inode *root, char *path, int nameiparent, char *name, int depth, int cont)
 {
+  // cprintf("namex was called, path: %s, name: %s\n", path, name);
   struct inode *ip, *next;
   char buf[128];
   char tname[DIRSIZ];
@@ -716,7 +717,7 @@ namex(struct inode *root, char *path, int nameiparent, char *name, int depth, in
     iunlock(ip);
     ilock(next);
     if(next->type == T_SYMLINK && cont) {
-      if(readi(next, buf, 0, next->size) != next->size || next->size >= sizeof(buf)){
+      if(next->size >= sizeof(buf) || readi(next, buf, 0, next->size) != next->size){
         iunlockput(next);
         iput(ip);
         return 0;
@@ -724,7 +725,8 @@ namex(struct inode *root, char *path, int nameiparent, char *name, int depth, in
       buf[next->size] = 0;
       iunlockput(next);
       next = namex(next, buf, 0, tname, depth + 1, cont);
-    }else
+    }
+    else
     {
       iunlock(next);
     }

@@ -7,7 +7,7 @@
 #include "x86.h"
 #include "elf.h"
 
-#define LINK_LIMIT 55
+#define LINK_LIMIT 50
 
 int
 exec(char *path, char **argv)
