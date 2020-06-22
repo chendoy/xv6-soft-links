@@ -56,9 +56,10 @@ void writeMoreThan70kBTest()
 
 void symbolicLinkTest()
 {
-    char buf[64];
+    char buf[50];
     symlink("/myfile.txt", "/link.txt");
-    readlink("/link.txt", buf, 64);
+    symlink("/link.txt", "/link2.txt");
+    readlink("/link.txt", buf, 50);
     printf(1, "readlink reads: %s\n", buf);
 }
 
