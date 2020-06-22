@@ -48,23 +48,39 @@ int readFromFile (char* buf, char* filename)
 
 void writeMoreThan70kBTest()
 {
+    printf(1, "creating 1MB file\n");
     memset((void*)writeBuf, 'a', FILE_SZ);
-    writeToFile(writeBuf, "myfile.txt");
-    // readFromFile(readBuf, "myfile.txt");
+    writeToFile(writeBuf, "myfile");
+    // readFromFile(readBuf, "myfile");
     // printf(1, "read content: %s\n", readBuf);
+    printf(1,"\n");
 }
 
-void symbolicLinkTest()
+void createTwoSymlinks()
 {
-    char buf[64];
-    symlink("/myfile.txt", "/link.txt");
-    readlink("/link.txt", buf, 64);
-    printf(1, "readlink reads: %s\n", buf);
+    printf(1,"\n");
+    printf(1, "creating symbolic link /myfile -> link\n");
+    symlink("/myfile", "/link");
+    printf(1, "creating symbolic link /link -> link2Link\n");
+    symlink("/link", "/link2Link");
+    printf(1, "creating symbolic link /link2Link -> link2Link2Link\n");
+    symlink("/link2Link", "/link2Link2Link");
+     printf(1,"\n");
 }
+void readLinkTest()
+{
+    char buf[50];
+    printf(1,"--------- readlink test ---------\n");
+    readlink("/link2Link2Link", buf, 50);
+    printf(1, "expected: /myfile, actual: %s\n", buf);
+}
+
+
 
 int main()
 {
     writeMoreThan70kBTest();
-    symbolicLinkTest();
+    createTwoSymlinks();
+    readLinkTest();
     exit();
 }

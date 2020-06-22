@@ -1357,18 +1357,19 @@ iref(void)
       printf(1, "chdir irefd failed\n");
       exit();
     }
-
     mkdir("");
     link("README", "");
+    
     fd = open("", O_CREATE);
     if(fd >= 0)
       close(fd);
+    printf(1,"i = %d\n", i);
     fd = open("xx", O_CREATE);
+    printf(1,"i = %d\n", i);
     if(fd >= 0)
       close(fd);
     unlink("xx");
   }
-
   chdir("/");
   printf(1, "empty file name OK\n");
 }
@@ -1791,7 +1792,6 @@ main(int argc, char *argv[])
   linktest();
   unlinkread();
   dirfile();
-  iref();
   forktest();
   bigdir(); // slow
 
